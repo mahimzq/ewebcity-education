@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0
+- Removed school-specific data from the plugin: fixed FCFA currency, theme link rewrites, hard-coded contact details.
+- Currency now comes from the school settings.
+- Removing online payment gateways is now an opt-in setting (`ewc_disable_online_gateways`).
+
 ## 2.1.0
 - Setup Wizard creates the school pages on activation.
 - Documentation page with shortcodes and setup steps.

@@ -3,12 +3,27 @@
  * Plugin Name: eWebCity Education
  * Plugin URI: https://www.facebook.com/eWebcity
  * Description: Complete school system: classes, students, admissions, attendance, fees, exams, library, plus student/parent/teacher/committee portals, Teacher Insights, Student 360°, Gradebook, approvals, activity log and live alerts. eWebCity Education © Mahim. Includes the School Engine (GPL).
- * Version: 2.1.0
+ * Version: 2.2.0
  * Author: Mahim
  * Author URI: https://www.facebook.com/eWebcity
  * License: GPLv2 or later
  * Text Domain: ewebcity-education
  */
+
+/* School currency symbol from the engine settings. */
+function ewc_currency_symbol() {
+	static $sym = null;
+	if ( null !== $sym ) {
+		return $sym;
+	}
+	$sym = get_option( 'ewc_currency', '' );
+	if ( class_exists( 'WLSM_Config' ) && class_exists( 'WLSM_Helper' ) && function_exists( 'ewc_school_id' ) ) {
+		$code = WLSM_Config::currency( ewc_school_id() );
+		$all  = WLSM_Helper::currency_symbols();
+		$sym  = isset( $all[ $code ] ) ? $all[ $code ] : $code;
+	}
+	return $sym ? $sym : '$';
+}
 
 /* Portal page URL: the page created by the Setup Wizard, else /dashboard/. */
 function ewc_portal_url() {
@@ -120,10 +135,13 @@ add_filter( 'do_shortcode_tag', 'tms_portal_approval_gate', 10, 2 );
 }
 
 /**
- * The school accepts Bank Transfer and Cash only. Remove unused third-party
- * checkout scripts and their preconnect hints from public pages.
+ * Optional (option ewc_disable_online_gateways): for schools that take bank
+ * transfer and cash only, remove unused third-party checkout scripts.
  */
 function tms_remove_unused_payment_assets() {
+	if ( ! get_option( 'ewc_disable_online_gateways' ) ) {
+		return;
+	}
 	foreach ( array( 'razorpay-checkout-js', 'paystack-checkout-js' ) as $handle ) {
 		wp_dequeue_script( $handle );
 		wp_deregister_script( $handle );
@@ -134,7 +152,7 @@ add_action( 'wp_print_scripts', 'tms_remove_unused_payment_assets', 0 );
 add_action( 'wp_print_footer_scripts', 'tms_remove_unused_payment_assets', 0 );
 
 function tms_remove_unused_payment_hints( $urls, $relation_type ) {
-	if ( 'dns-prefetch' !== $relation_type ) {
+	if ( 'dns-prefetch' !== $relation_type || ! get_option( 'ewc_disable_online_gateways' ) ) {
 		return $urls;
 	}
 
@@ -161,40 +179,11 @@ function tms_strip_unused_payment_markup( $html ) {
 		'#<script[^>]+id=["\'](?:razorpay-checkout-js|paystack-checkout-js)["\'][^>]*>\s*</script>\s*#i',
 	);
 
-	$html = preg_replace( $patterns, '', $html );
+	if ( get_option( 'ewc_disable_online_gateways' ) ) {
+		$html = preg_replace( $patterns, '', $html );
+	}
 
-	return preg_replace_callback(
-		'~<a\b([^>]*?)href=(["\'])#\2([^>]*)>(.*?)</a>~si',
-		static function ( $match ) {
-			$label = trim( wp_strip_all_tags( html_entity_decode( $match[4], ENT_QUOTES, 'UTF-8' ) ) );
-			$url   = '';
-
-			if ( 'Discover More' === $label ) {
-				$url = home_url( '/about-us/' );
-			} elseif ( 'Learn More' === $label ) {
-				$url = home_url( '/curriculum/' );
-			} elseif ( 'Ask Questions' === $label ) {
-				$url = home_url( '/contact-us/' );
-			} elseif ( 'Call Us' === $label ) {
-				$url = 'tel:' . preg_replace( '/[^0-9+]/', '', (string) get_option( 'ewc_school_phone', '' ) );
-			} elseif ( 'Term of Service' === $label ) {
-				$url = 'mailto:' . get_option( 'admin_email' ) . '?subject=Terms%20of%20Service%20request';
-			} elseif ( 'Privacy Policy' === $label ) {
-				$url = 'mailto:' . get_option( 'admin_email' ) . '?subject=Privacy%20Policy%20request';
-			} elseif ( 'Cookie Policy' === $label ) {
-				$url = 'mailto:' . get_option( 'admin_email' ) . '?subject=Cookie%20Policy%20request';
-			} elseif ( false !== strpos( $label, '(DEMO)' ) ) {
-				$url = home_url( '/blog/' );
-			}
-
-			if ( ! $url ) {
-				return $match[0];
-			}
-
-			return '<a' . $match[1] . 'href="' . esc_url( $url ) . '"' . $match[3] . '>' . $match[4] . '</a>';
-		},
-		$html
-	);
+	return $html;
 }
 
 function tms_start_payment_markup_filter() {
@@ -321,13 +310,14 @@ function tms_logged_in_labels( $content, $widget ) {
 	return $content;
 }
 
-/* ---- Parent portal shows "$" instead of the school currency: normalise to FCFA ---- */
+/* ---- Parent portal shows "$" instead of the school currency: use the school symbol ---- */
 add_filter( 'elementor/widget/render_content', 'tms_parent_currency', 11, 2 );
 function tms_parent_currency( $content, $widget ) {
 	if ( is_admin() || false === strpos( $content, 'wlsm-container-parent' ) ) {
 		return $content;
 	}
-	return preg_replace( '/\$\s?(?=\d)/', 'FCFA', $content );
+	$sym = ewc_currency_symbol();
+	return '$' === $sym ? $content : preg_replace( '/\$\s?(?=\d)/', $sym, $content );
 }
 
 /* ==== Branded Teacher Panel (School Management staff, non-administrators) ==== */
@@ -1091,7 +1081,7 @@ function tms_page_360() {
 		array( '📊', 'Attendance', null === $rate ? '–' : $rate . '%', (int) $att->p . ' present · ' . (int) $att->a . ' absent', null === $rate ? 'slate' : ( $rate >= 90 ? 'green' : ( $rate >= 75 ? 'gold' : 'red' ) ) ),
 		array( '🏆', 'Average mark', null === $avg ? '–' : $avg . '%', count( $results ) . ' papers marked', $g[1] ),
 		array( '🎓', 'Grade', $g[0], 'A ≥80 · B ≥65 · C ≥50', $g[1] ),
-		array( '💳', 'Fees', $unpaid ? $unpaid . ' due' : 'Clear', 'Paid ' . number_format( $paid ) . ' FCFA', $unpaid ? 'red' : 'green' ),
+		array( '💳', 'Fees', $unpaid ? $unpaid . ' due' : 'Clear', 'Paid ' . number_format( $paid ) . ' ' . ewc_currency_symbol(), $unpaid ? 'red' : 'green' ),
 		array( '✏️', 'Homework', $hw, 'Submissions', 'teal' ),
 		array( '📝', 'Leaves', count( $leaves ), 'Recent requests', 'purple' ),
 	);
@@ -1540,7 +1530,7 @@ add_filter( 'do_shortcode_tag', function ( $output, $tag ) {
 
 /* ---- Committee pages ---- */
 function tms_money( $n ) {
-	return number_format( (float) $n, 0, '.', ',' ) . ' FCFA';
+	return number_format( (float) $n, 0, '.', ',' ) . ' ' . ewc_currency_symbol();
 }
 function tms_cm_guard() {
 	if ( ! tms_can_oversee() ) {

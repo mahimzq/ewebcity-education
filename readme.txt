@@ -4,7 +4,7 @@ Tags: school management, student portal, attendance, exams, fees
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,11 @@ Deactivating it switches off the whole school system on the website. Your data s
 Change the design, then press **Copy current design into plugin** under eWebCity → Documentation.
 
 == Changelog ==
+
+= 2.2.0 =
+* Removed school-specific data: fixed currency, theme links and contact details.
+* Currency now follows the school setting.
+* Turning off online payment gateways is optional (setting ewc_disable_online_gateways).
 
 = 2.1.0 =
 * Setup Wizard, Documentation page and portable design file.
