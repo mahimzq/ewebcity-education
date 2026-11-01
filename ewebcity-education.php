@@ -3,7 +3,7 @@
  * Plugin Name: eWebCity Education
  * Plugin URI: https://www.facebook.com/eWebcity
  * Description: Complete school system: classes, students, admissions, attendance, fees, exams, library, plus student/parent/teacher/committee portals, Teacher Insights, Student 360°, Gradebook, approvals, activity log and live alerts. eWebCity Education © Mahim. Includes the School Engine (GPL).
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: Mahim
  * Author URI: https://www.facebook.com/eWebcity
  * License: GPLv2 or later
@@ -638,7 +638,7 @@ function tms_tdb_donut( $parts, $label, $value ) {
 	$h  = '<div class="tdb-donut-wrap"><div class="tdb-donut" style="background:' . esc_attr( $bg ) . '"><div class="tdb-donut-hole"><b>' . esc_html( $value ) . '</b><span>' . esc_html( $label ) . '</span></div></div><ul class="tdb-legend">';
 	foreach ( $parts as $pt ) {
 		$pc = $total ? round( 100 * $pt['v'] / $total ) : 0;
-		$h .= '<li><i style="background:' . esc_attr( $pt['c'] ) . '"></i>' . esc_html( $pt['l'] ) . '<em>' . esc_html( $pt['v'] ) . ' · ' . $pc . '%</em></li>';
+		$h .= '<li><i style="background:' . esc_attr( $pt['c'] ) . '"></i>' . esc_html( $pt['l'] ) . '<em>' . esc_html( number_format_i18n( (float) $pt['v'] ) ) . ' · ' . $pc . '%</em></li>';
 	}
 	return $h . '</ul></div>';
 }
@@ -1303,6 +1303,13 @@ add_action( 'admin_head', function () {
 	html.tms-dark .tms-tp .form-control,html.tms-dark .tms-tp select,html.tms-dark .tms-tp input[type=text],html.tms-dark .tms-tp input[type=search],html.tms-dark .tms-tp textarea{background:#0F1729!important;color:#E2E8F0!important;border-color:#1F2A44!important}
 	html.tms-dark .tms-tp .tdb-legend li,html.tms-dark .tms-tp .tdb-pn small,html.tms-dark .tms-tp .tdb-kpi-s,html.tms-dark .tms-tp .tdb-kpi-l{color:#94A3B8!important}
 	html.tms-dark .tms-tp #tms-dark-toggle{background:#F5B82E;color:#043353}
+	html.tms-dark .tms-tp .cm-h li,html.tms-dark .tms-tp .cm-h b,html.tms-dark .tms-tp .cm-col b,html.tms-dark .tms-tp .s360-m b,html.tms-dark .tms-tp .cm-item-main b,html.tms-dark .tms-tp .cm-amt,html.tms-dark .tms-tp .tdb-list li span,html.tms-dark .tms-tp .tdb-timeline span,html.tms-dark .tms-tp .s360-table td,html.tms-dark .tms-tp .gb-table td.gb-sticky,html.tms-dark .tms-tp .gb-table tfoot td,html.tms-dark .tms-tp .cm-filter label,html.tms-dark .tms-tp .ewc-hero p{color:#E2E8F0!important}
+	html.tms-dark .tms-tp .cm-col small,html.tms-dark .tms-tp .cm-item-main span,html.tms-dark .tms-tp .tdb-list small,html.tms-dark .tms-tp .s360-m span,html.tms-dark .tms-tp .cm-log td small{color:#94A3B8!important}
+	html.tms-dark .tms-tp .cm-item{border-color:#1F2A44;background:#0F1729}
+	html.tms-dark .tms-tp .cm-det span,html.tms-dark .tms-tp .cm-pages a,html.tms-dark .tms-tp .tdb-bar,html.tms-dark .tms-tp .s360-mbar{background:#1F2A44!important;color:#E2E8F0}
+	html.tms-dark .tms-tp .cm-pages a.on{background:#7C3AED!important}
+	html.tms-dark .tms-tp .cm-money-row td{background:#2A1620!important}
+	html.tms-dark .tms-tp .cm-filter select,html.tms-dark .tms-tp .cm-filter input{background:#0F1729!important;color:#E2E8F0!important;border-color:#1F2A44!important}
 	@media (max-width:782px){.tms-tp #wpcontent{padding-left:10px}.tms-tp .wlsm.container-fluid{padding-right:10px}.tms-tp .wlsm-section-heading{font-size:19px!important}}
 	</style>
 	<?php
@@ -2143,4 +2150,28 @@ add_action( 'admin_menu', function () {
 }, 10003 );
 add_action( 'admin_head', function () {
 	echo '<style>a[href*="weblizar.com"]:not([href*="facebook"]),img[src*="weblizar"],.wlsm-weblizar,.wlsm-pro-banner,.wlsm-rate-us{display:none!important}</style>';
+} );
+
+/* Committee: keep the Committee menu open on the staff pages it links to. */
+add_action( 'admin_footer', function () {
+	if ( ! function_exists( 'tms_is_committee' ) || ! tms_is_committee() || empty( $_GET['page'] ) || 0 !== strpos( $_GET['page'], 'sm-staff-employee' ) ) {
+		return;
+	}
+	?>
+	<script id="ewc-open-committee-menu">
+	(function () {
+		var li = document.getElementById('toplevel_page_tms-committee');
+		if (!li) { return; }
+		li.classList.remove('wp-not-current-submenu');
+		li.classList.add('wp-has-current-submenu', 'wp-menu-open', 'current');
+		var a = li.querySelector('a.menu-top');
+		if (a) { a.classList.add('wp-has-current-submenu', 'current'); a.classList.remove('wp-not-current-submenu'); }
+		var page = new URLSearchParams(location.search).get('page');
+		li.querySelectorAll('.wp-submenu a').forEach(function (s) {
+			var h = s.getAttribute('href') || '';
+			if (h.slice(-page.length) === page) { s.parentElement.classList.add('current'); s.classList.add('current'); }
+		});
+	})();
+	</script>
+	<?php
 } );

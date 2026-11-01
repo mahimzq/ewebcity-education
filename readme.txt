@@ -4,7 +4,7 @@ Tags: school management, student portal, attendance, exams, fees
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,11 @@ Deactivating it switches off the whole school system on the website. Your data s
 Change the design, then press **Copy current design into plugin** under eWebCity → Documentation.
 
 == Changelog ==
+
+= 2.2.1 =
+* Dark mode: readable class names, month labels and approval rows.
+* Money in charts shows thousands separators.
+* Committee menu stays open on staff pages.
 
 = 2.2.0 =
 * Removed school-specific data: fixed currency, theme links and contact details.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.1
+- Dark mode readability fixes on Committee and Teacher pages.
+- Thousands separators in chart legends.
+- Committee menu stays open on staff pages.
+
 ## 2.2.0
 - Removed school-specific data from the plugin: fixed FCFA currency, theme link rewrites, hard-coded contact details.
 - Currency now comes from the school settings.
