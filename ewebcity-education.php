@@ -3,7 +3,7 @@
  * Plugin Name: eWebCity Education
  * Plugin URI: https://www.facebook.com/eWebcity
  * Description: Complete school system: classes, students, admissions, attendance, fees, exams, library, plus student/parent/teacher/committee portals, Teacher Insights, Student 360°, Gradebook, approvals, activity log and live alerts. eWebCity Education © Mahim. Includes the School Engine (GPL).
- * Version: 2.2.1
+ * Version: 2.2.2
  * Author: Mahim
  * Author URI: https://www.facebook.com/eWebcity
  * License: GPLv2 or later

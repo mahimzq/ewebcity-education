@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2.2
+- PHP 8 compatibility fix in the bundled Paytm library.
+
 ## 2.2.1
 - Dark mode readability fixes on Committee and Teacher pages.
 - Thousands separators in chart legends.
